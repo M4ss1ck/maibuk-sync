@@ -16,12 +16,6 @@ PocketBase will be available at `http://localhost:8090`.
 2. Create an admin account
 3. The `sync_items` collection is created automatically via migration
 
-## OAuth Setup (Google)
-
-1. Go to Admin Dashboard → Settings → Auth providers
-2. Enable Google and enter your OAuth2 client ID and secret
-3. Set the redirect URL to match your PocketBase instance URL
-
 ## Manual Setup (without Docker)
 
 1. Download PocketBase from https://pocketbase.io/docs/
@@ -32,11 +26,11 @@ PocketBase will be available at `http://localhost:8090`.
 
 ### sync_items
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `user` | relation → users | Owner of the sync item |
-| `book_id` | text | Client-side book UUID |
-| `encrypted_data` | file | Encrypted blob (max 50MB) |
-| `checksum` | text | SHA-256 of plaintext (for sync comparison) |
+| Field            | Type             | Notes                                      |
+| ---------------- | ---------------- | ------------------------------------------ |
+| `user`           | relation → users | Owner of the sync item                     |
+| `book_id`        | text             | Client-side book UUID                      |
+| `encrypted_data` | file             | Encrypted blob (max 50MB)                  |
+| `checksum`       | text             | SHA-256 of plaintext (for sync comparison) |
 
 Access rules ensure users can only read/write their own sync items.
