@@ -14,7 +14,9 @@ PocketBase will be available at `http://localhost:8090`.
 
 1. Open `http://localhost:8090/_/` to access the admin dashboard
 2. Create an admin account
-3. The `sync_items` and `version_items` collections are created automatically via migrations
+3. The `sync_items`, `version_items`, `metrics_events_rows`, and
+   `metrics_tombstones_rows` collections are created automatically via
+   migrations
 
 ## Manual Setup (without Docker)
 
