@@ -59,3 +59,45 @@ create-only from the client. Admins can still delete via the dashboard.
 
 Access rules: list/view/create scoped to `user = @request.auth.id`; update and
 delete blocked at the API (admin-only).
+
+### metrics_events_rows
+
+Append-only row-level metrics sync. Each record stores one client-generated
+metric event. Metadata stays plaintext for incremental `updated > since` pulls;
+the event payload is encrypted client-side and stored as base64 text.
+
+| Field               | Type             | Notes                                      |
+| ------------------- | ---------------- | ------------------------------------------ |
+| `user`              | relation → users | Owner                                      |
+| `created`           | autodate         | Server insert time                         |
+| `updated`           | autodate         | Server update time; used for pull cursors  |
+| `client_id`         | text             | Client-side event UUID, unique per user    |
+| `device_id`         | text             | Originating device UUID                    |
+| `timestamp`         | text             | Event time, ISO 8601 UTC                   |
+| `local_date`        | text             | Event date in the user's local timezone    |
+| `tz_offset_min`     | number           | Local UTC offset in minutes                |
+| `event_type`        | text             | `writing.*`, `session.*`, reserved `ai.*`  |
+| `work_id`           | text             | Nullable book/work UUID                    |
+| `schema_version`    | number           | Event payload schema version               |
+| `encrypted_payload` | text             | Base64 encrypted JSON payload              |
+
+Access rules: list/view/create scoped to `user = @request.auth.id`; update and
+delete blocked at the API. Unique index on `(user, client_id)` deduplicates
+multi-device pushes; `(user, updated)` supports incremental pulls.
+
+### metrics_tombstones_rows
+
+Append-only tombstones for deleted metric events. Tombstones let opt-out purges
+propagate across devices without resurrecting events that still exist elsewhere.
+
+| Field        | Type             | Notes                                      |
+| ------------ | ---------------- | ------------------------------------------ |
+| `user`       | relation → users | Owner                                      |
+| `created`    | autodate         | Server insert time                         |
+| `updated`    | autodate         | Server update time; used for pull cursors  |
+| `client_id`  | text             | Deleted event UUID, unique per user        |
+| `device_id`  | text             | Device that performed the delete           |
+| `deleted_at` | text             | Deletion time, ISO 8601 UTC                |
+| `reason`     | text             | `category-opt-out`, `user-purge`, etc.     |
+
+Access rules and indexes mirror `metrics_events_rows`.

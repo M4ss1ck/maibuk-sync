@@ -30,6 +30,20 @@ migrate(
           cascadeDelete: true,
         },
         {
+          name: "created",
+          type: "autodate",
+          onCreate: true,
+          onUpdate: false,
+          system: true,
+        },
+        {
+          name: "updated",
+          type: "autodate",
+          onCreate: true,
+          onUpdate: true,
+          system: true,
+        },
+        {
           name: "client_id",
           type: "text",
           required: true,
