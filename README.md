@@ -14,7 +14,7 @@ PocketBase will be available at `http://localhost:8090`.
 
 1. Open `http://localhost:8090/_/` to access the admin dashboard
 2. Create an admin account
-3. The `sync_items`, `version_items`, `metrics_events_rows`, and
+3. The `sync_items`, `note_items`, `version_items`, `metrics_events_rows`, and
    `metrics_tombstones_rows` collections are created automatically via
    migrations
 
@@ -38,6 +38,20 @@ Live-document store — one row per book, last-write-wins.
 | `checksum`       | text             | SHA-256 of plaintext (for sync comparison) |
 
 Access rules ensure users can only read/write their own sync items.
+
+### note_items
+
+Live-document store — one row per note, last-write-wins. Mirrors `sync_items`
+exactly; notes are full-synced (no versioning).
+
+| Field            | Type             | Notes                                      |
+| ---------------- | ---------------- | ------------------------------------------ |
+| `user`           | relation → users | Owner of the note item                     |
+| `note_id`        | text             | Client-side note UUID                      |
+| `encrypted_data` | file             | Encrypted blob (max 50MB)                  |
+| `checksum`       | text             | SHA-256 of plaintext (for sync comparison) |
+
+Access rules ensure users can only read/write their own note items.
 
 ### version_items
 
