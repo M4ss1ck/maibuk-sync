@@ -25,8 +25,8 @@ MUST follow this contract.
 
 1. `kind` vocabulary is fixed per app; new types add a documented `kind`, not a server change.
 2. Only `app_name`, `kind`, `key`, `group`, `checksum`, `deleted` may be plaintext. All descriptive data goes in encrypted `meta`/`content`.
-3. `version` and `metric` objects are immutable -- never rewrite their content; corrections are new objects.
-4. Deletes are soft: set `deleted = true`. Never hard-delete (peers learn of removals via incremental pull).
+3. `version` and `metric` objects are immutable -- never rewrite their content; corrections are new objects. A `version` may move once to `deleted = true` (a tombstone, content cleared) and never back.
+4. Deletes are soft: set `deleted = true`. Never hard-delete (peers learn of removals via incremental pull). A soft delete frees the payload: the server clears `content` on any create or update with `deleted = true` (`pb_hooks/objects.pb.js`), and clients send it cleared too. The row stays, so a deleted key cannot be created again; a client that brings an item back updates the deleted row.
 5. List-and-compare reads filter `deleted = false`; incremental (`updated > since`) reads must NOT filter `deleted`.
 6. The encrypted `meta` envelope embeds a `v` (formatVersion); bump it on envelope changes. The server never gates format.
 
@@ -37,7 +37,7 @@ MUST follow this contract.
 | `book` | book id | unset | yes | Whole book snapshot (book + chapters). |
 | `note` | note id | unset | yes | Whole note snapshot. |
 | `canvas` | canvas id | unset | yes | Whole canvas document (nodes, edges, embedded images). |
-| `version` | version id | book id | no (rule 3) | Book version snapshot. |
+| `version` | version id | book id | no (rule 3); tombstone only | Book version snapshot. |
 | `metric` | client row id | unset | no (rule 3) | Writing metric row (in `meta`). |
 
 ### `canvas`
@@ -48,3 +48,10 @@ MUST follow this contract.
 - Note references inside a canvas point at `note` keys. Deleting a note never rewrites canvases; the reference is kept and shown as missing.
 - Embedded images can make a canvas several MB. The 50MB `content` limit (`pb_migrations/007_objects.js`) applies unchanged; clients do not cap size themselves and surface the server's rejection as a sync error.
 - Deleting a canvas follows rule 4 (`deleted = true`).
+
+### `version`
+
+- One object per Version, pushed once and never rewritten.
+- Which Versions to keep is the client's rule (maibuk ADR 0033): every device computes the same kept set from the `version` metadata, downloads only kept Versions, and tombstones the rest (`deleted = true`, content cleared). A tombstone wins over any local copy.
+- Renaming a Version creates a new `version` object and tombstones the old one; `meta` is never rewritten.
+- Deleting a Book tombstones its `version` objects. The server does not cascade: that is an app rule.
